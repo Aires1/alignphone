@@ -248,13 +248,23 @@ function onOri(e){
   const zx=ca*sg+sa*sb*cg, zy=sa*sg-ca*sb*cg, zz=cb*cg;
   const elev=Math.asin(Math.max(-1,Math.min(1,zz)))*R2D;
   const hdg=Math.atan2(zx,zy)*R2D;
-  const t=performance.now();
-  cur={t,elev,hdg,horiz:Math.hypot(zx,zy)};
-  ring.push(cur); while(ring.length&&t-ring[0].t>3000)ring.shift();
-  nEvt++; for(const f of subs)f(cur);
+  cur={t:performance.now(),elev,hdg,horiz:Math.hypot(zx,zy)};
+  nEvt++;
 }
 const subs=new Set();
-setInterval(()=>{rate=nEvt;nEvt=0;const p=$("sensPill");if(rate>5){p.textContent=rate+" Hz";p.className="pill on"}else{p.textContent="sem sinal";p.className="pill bad"}},1000);
+/* Amostragem em ritmo fixo (50 Hz) do último valor recebido.
+   O Chrome/Android só dispara deviceorientation quando o ângulo muda > ~0,1°,
+   então com o celular parado não chegam eventos — o valor continua válido. */
+setInterval(()=>{
+  if(!cur)return;
+  const s={t:performance.now(),elev:cur.elev,hdg:cur.hdg,horiz:cur.horiz};
+  ring.push(s); while(ring.length&&s.t-ring[0].t>3000)ring.shift();
+  for(const f of subs)f(s);
+},20);
+setInterval(()=>{rate=nEvt;nEvt=0;const p=$("sensPill");
+  if(rate>5){p.textContent=rate+" Hz";p.className="pill on"}
+  else if(cur){p.textContent="parado ✓";p.className="pill on"}
+  else{p.textContent="sem sinal";p.className="pill bad"}},1000);
 
 function stats(arr){ // média/desvio de elev e hdg (rumo com média circular)
   const n=arr.length;if(!n)return null;
@@ -266,7 +276,7 @@ function stats(arr){ // média/desvio de elev e hdg (rumo com média circular)
 // captura média durante S.capT segundos
 function capture(barEl){
   return new Promise((res,rej)=>{
-    if(!cur||rate<5){rej(new Error("Sem dados do sensor"));return}
+    if(!cur){rej(new Error("Sem dados do sensor — toque em Ativar sensores"));return}
     const buf=[],T=S.capT*1000,t0=performance.now();
     const f=s=>{buf.push(s);const p=(s.t-t0)/T;if(barEl)barEl.style.width=Math.min(100,p*100)+"%";
       if(s.t-t0>=T){subs.delete(f);if(barEl)setTimeout(()=>barEl.style.width="0",400);const st=stats(buf);beep(st.sdE>S.stdLim||st.sdH>S.stdLim*2?330:990);res(st)}};
