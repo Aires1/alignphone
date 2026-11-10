@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0d0f12">
+<title>AlignPhone — Alinhamento com iPhone</title>
+<style>
+:root{
+  --bg:#0d0f12;--panel:#161a20;--panel2:#1d222a;--line:#2a313b;
+  --tx:#e9edf2;--mut:#8b96a5;--acc:#ffb020;--ok:#3ccf7a;--bad:#ff5a52;--info:#4aa8ff;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+body{padding:env(safe-area-inset-top) env(safe-area-inset-right) calc(70px + env(safe-area-inset-bottom)) env(safe-area-inset-left);min-height:100vh}
+header{position:sticky;top:0;z-index:5;background:linear-gradient(var(--bg) 85%,transparent);padding:10px 14px 8px}
+.brand{display:flex;align-items:center;justify-content:space-between}
+.brand b{font-size:17px;letter-spacing:.3px}.brand b span{color:var(--acc)}
+.pill{font:600 11px var(--mono);padding:3px 8px;border-radius:99px;background:var(--panel2);color:var(--mut)}
+.pill.on{color:var(--ok)}.pill.bad{color:var(--bad)}
+.live{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:8px}
+.live div{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:6px 8px}
+.live small{display:block;color:var(--mut);font-size:10px;text-transform:uppercase;letter-spacing:.6px}
+.live b{font:600 18px var(--mono)}
+main{padding:4px 14px 20px}
+section{display:none}section.act{display:block}
+h2{font-size:18px;margin:10px 0 6px}
+h3{font-size:14px;margin:14px 0 6px;color:var(--acc);text-transform:uppercase;letter-spacing:.6px}
+p,li{color:#c3cbd6}.mut{color:var(--mut);font-size:13px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px;margin:10px 0}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+button{font:600 15px inherit;font-family:inherit;border:0;border-radius:11px;padding:12px 14px;background:var(--panel2);color:var(--tx);border:1px solid var(--line)}
+button.pri{background:var(--acc);color:#1a1200;border-color:var(--acc)}
+button.sm{padding:7px 10px;font-size:13px}
+button:disabled{opacity:.4}
+button.sel{outline:2px solid var(--acc)}
+.grow{flex:1}
+.big{font:700 44px var(--mono);text-align:center;margin:6px 0}
+.big small{font-size:16px;color:var(--mut)}
+.steps{counter-reset:s;list-style:none;padding:0;margin:8px 0}
+.steps li{counter-increment:s;position:relative;padding:8px 0 8px 34px;border-bottom:1px solid var(--line)}
+.steps li:before{content:counter(s);position:absolute;left:0;top:8px;width:24px;height:24px;border-radius:50%;background:var(--panel2);color:var(--mut);font:600 12px var(--mono);display:grid;place-items:center}
+.steps li.done:before{content:"✓";background:var(--ok);color:#022}
+.steps li.cur:before{background:var(--acc);color:#1a1200}
+.val{font:600 14px var(--mono);color:var(--tx)}
+.car{display:grid;grid-template-columns:1fr 70px 1fr;grid-template-rows:auto 1fr auto;gap:8px;align-items:center;margin:8px 0}
+.wheel{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:8px;font:12px var(--mono);min-height:84px}
+.wheel b{display:block;font:700 12px -apple-system,sans-serif;color:var(--acc);margin-bottom:3px}
+.body{grid-row:1/4;grid-column:2;height:100%;min-height:200px;border:2px solid var(--line);border-radius:30px 30px 18px 18px;display:grid;place-items:center;color:var(--mut);font-size:11px;writing-mode:vertical-rl}
+.ok{color:var(--ok)}.bad{color:var(--bad)}.warn{color:var(--acc)}
+nav{position:fixed;left:0;right:0;bottom:0;display:flex;background:#0a0c0f;border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom);z-index:9}
+nav button{flex:1;border:0;border-radius:0;background:none;color:var(--mut);font-size:11px;padding:10px 2px 8px}
+nav button i{display:block;font-style:normal;font-size:19px;margin-bottom:2px}
+nav button.act{color:var(--acc)}
+label{display:block;margin:8px 0 3px;color:var(--mut);font-size:13px}
+input,select{width:100%;font:16px var(--mono);background:var(--panel2);color:var(--tx);border:1px solid var(--line);border-radius:10px;padding:10px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.tog{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
+.tog input{width:auto;transform:scale(1.3)}
+#gate{position:fixed;inset:0;z-index:20;background:var(--bg);display:flex;flex-direction:column;justify-content:center;padding:30px}
+#gate h1{font-size:28px;margin:0 0 8px}#gate h1 span{color:var(--acc)}
+.bar{height:6px;border-radius:3px;background:var(--panel2);overflow:hidden;margin:6px 0}
+.bar i{display:block;height:100%;width:0;background:var(--acc);transition:width .1s linear}
+#toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#000c;border:1px solid var(--line);padding:10px 14px;border-radius:10px;font-size:14px;opacity:0;transition:.25s;pointer-events:none;z-index:30;max-width:90vw;text-align:center}
+#toast.show{opacity:1}
+table{width:100%;border-collapse:collapse;font:13px var(--mono)}
+td,th{padding:6px 4px;border-bottom:1px solid var(--line);text-align:right}
+th:first-child,td:first-child{text-align:left;font-family:-apple-system,sans-serif}
+th{color:var(--mut);font-weight:500;font-size:11px;text-transform:uppercase}
+svg text{font-family:var(--mono)}
+</style>
+</head>
+<body>
+
+<div id="gate">
+  <h1>Align<span>Phone</span></h1>
+  <p>Cambagem, convergência e cáster usando o giroscópio e o acelerômetro do iPhone.</p>
+  <p class="mut">Toque abaixo e autorize o acesso a “Movimento e Orientação”. A página precisa estar em HTTPS e aberta no Safari.</p>
+  <button class="pri" id="btnStart" style="margin-top:14px">Ativar sensores</button>
+  <p class="mut" id="gateMsg" style="margin-top:12px"></p>
+</div>
+
+<header>
+  <div class="brand"><b>Align<span>Phone</span></b><span class="pill" id="sensPill">sensor —</span></div>
+  <div class="live">
+    <div><small>Cambagem</small><b id="lvCam">—</b></div>
+    <div><small>Rumo rel.</small><b id="lvHdg">—</b></div>
+    <div><small>Estab.</small><b id="lvStd">—</b></div>
+  </div>
+</header>
+
+<main>
+<!-- ================= CAMBAGEM ================= -->
+<section id="s-cam" class="act">
+  <h2>Cambagem</h2>
+  <div class="card">
+    <div class="row" id="camWheels"></div>
+    <div class="tog"><span>Método de reversão (2 leituras, 0° e 180°)</span><input type="checkbox" id="camRev" checked></div>
+    <ol class="steps" id="camSteps"></ol>
+    <div class="bar"><i id="camBar"></i></div>
+    <div class="row"><button class="pri grow" id="camGo">Capturar</button><button id="camReset">Reiniciar</button></div>
+    <div class="big" id="camOut">—</div>
+    <p class="mut" id="camInfo"></p>
+  </div>
+  <div class="card">
+    <h3>Zerar no piso (por lado)</h3>
+    <p class="mut">Compensa a inclinação lateral do piso. Apoie o celular <b>em pé sobre a borda inferior</b>, no chão, ao lado da roda, com a tela virada para fora do carro (igual ficará na roda). Use um esquadro/bloco para manter o celular a 90°.</p>
+    <div class="row"><button class="grow" id="zeroL">Zerar lado ESQ</button><button class="grow" id="zeroR">Zerar lado DIR</button></div>
+    <p class="mut" id="zeroInfo"></p>
+  </div>
+  <div class="card mut">
+    <b style="color:var(--tx)">Como posicionar:</b> encoste o celular (de preferência dentro de um adaptador/régua que apoie em 2 pontos na borda do aro, nunca no pneu) com a tela para fora do carro. Volante centralizado, carro em piso plano, pneus calibrados. Positivo = topo da roda inclinado para fora.
+  </div>
+</section>
+
+<!-- ================= CONVERGÊNCIA ================= -->
+<section id="s-toe">
+  <h2>Convergência (toe)</h2>
+  <div class="card">
+    <div class="row"><button class="grow sel" id="toeSideL">Lado ESQ</button><button class="grow" id="toeSideR">Lado DIR</button></div>
+    <label>Referência</label>
+    <select id="toeRefType">
+      <option value="rear">Roda traseira do mesmo lado (linha de empuxo)</option>
+      <option value="chassis">Régua paralela à linha do chassi</option>
+    </select>
+    <ol class="steps" id="toeSteps"></ol>
+    <div class="bar"><i id="toeBar"></i></div>
+    <div class="row" id="toeBtns"></div>
+    <div class="big" id="toeOut">—</div>
+    <p class="mut" id="toeInfo"></p>
+  </div>
+  <div class="card mut">
+    O giroscópio mede quanto o celular <b>girou</b> entre a referência e a roda. Por isso: não solte o celular sobre superfícies metálicas que vibrem, faça a medição <b>em menos de 30 s</b>, mantenha o celular sempre na mesma orientação (retrato/paisagem) e use a “Reconferência” para corrigir a deriva. Positivo = convergente (toe-in).
+  </div>
+</section>
+
+<!-- ================= CÁSTER ================= -->
+<section id="s-cas">
+  <h2>Cáster</h2>
+  <div class="card">
+    <div class="row"><button class="grow sel" id="casSideL">Diant. ESQ</button><button class="grow" id="casSideR">Diant. DIR</button></div>
+    <ol class="steps" id="casSteps"></ol>
+    <div class="bar"><i id="casBar"></i></div>
+    <div class="row"><button class="pri grow" id="casGo">Capturar</button><button id="casReset">Reiniciar</button></div>
+    <div class="big" id="casOut">—</div>
+    <p class="mut" id="casInfo"></p>
+  </div>
+  <div class="card mut">Método do esterçamento: a variação da cambagem ao virar a roda ~20° para fora e ~20° para dentro dá o cáster. O ângulo real de esterço é medido pelo giroscópio, então não precisa de pratos goniométricos — mas pratos giratórios (ou dois sacos plásticos com graxa sob os pneus) ajudam muito.</div>
+</section>
+
+<!-- ================= RESULTADOS ================= -->
+<section id="s-res">
+  <h2>Resultados</h2>
+  <div class="card">
+    <div class="car">
+      <div class="wheel" id="w-FL"></div><div class="body">FRENTE ↑</div><div class="wheel" id="w-FR"></div>
+      <div style="grid-column:1;grid-row:2"></div><div style="grid-column:3;grid-row:2"></div>
+      <div class="wheel" id="w-RL"></div><div class="wheel" id="w-RR"></div>
+    </div>
+    <table id="totTbl"></table>
+    <div class="row" style="margin-top:10px"><button class="grow" id="copyRes">Copiar relatório</button><button id="clearRes">Limpar</button></div>
+  </div>
+  <div class="card">
+    <h3>Especificação (opcional)</h3>
+    <p class="mut">Valor alvo ± tolerância. Deixe em branco para não comparar.</p>
+    <div id="specForm"></div>
+  </div>
+</section>
+
+<!-- ================= AJUSTES ================= -->
+<section id="s-set">
+  <h2>Ajustes</h2>
+  <div class="card">
+    <label>Diâmetro de referência p/ converter toe em mm (mm)</label>
+    <div class="row"><input id="diam" type="number" inputmode="decimal" class="grow" style="flex:1">
+      <select id="diamPreset" style="width:120px"><option value="">aro…</option></select></div>
+    <p class="mut">Use o diâmetro do aro (padrão das tabelas de fabricante) ou o do pneu, conforme sua especificação.</p>
+    <label>Tempo de captura (s)</label>
+    <input id="capT" type="number" inputmode="decimal" step="0.5" min="0.5" max="5">
+    <label>Limite de estabilidade (desvio-padrão, °)</label>
+    <input id="stdLim" type="number" inputmode="decimal" step="0.01">
+    <div class="tog"><span>Exibir em graus e minutos (°′)</span><input type="checkbox" id="dms"></div>
+    <div class="tog"><span>Inverter sinal da cambagem</span><input type="checkbox" id="invCam"></div>
+    <div class="tog"><span>Inverter sinal da convergência</span><input type="checkbox" id="invToe"></div>
+  </div>
+  <div class="card">
+    <h3>Diagnóstico do sensor</h3>
+    <p class="mut">Teste de sinal: com o celular em pé, gire-o no sentido horário (visto de cima). O “Rumo rel.” deve AUMENTAR. Se diminuir, marque “Inverter sinal da convergência”.</p>
+    <div class="row"><button class="grow" id="hdgZero">Zerar rumo relativo</button></div>
+    <p class="mut" style="font-family:var(--mono)" id="diag"></p>
+  </div>
+  <div class="card mut">
+    <b style="color:var(--tx)">Limitações honestas:</b> o sensor do iPhone tem resolução ~0,01°, mas a exatidão real depende do adaptador e do método (repetibilidade típica ±0,05–0,1° na cambagem; toe por giroscópio sofre deriva). Confirme numa máquina de alinhamento antes de confiar em ajustes finos.
+  </div>
+</section>
+</main>
+
+<nav>
+  <button class="act" data-s="cam"><i>⟂</i>Cambagem</button>
+  <button data-s="toe"><i>⇉</i>Convergência</button>
+  <button data-s="cas"><i>↺</i>Cáster</button>
+  <button data-s="res"><i>▦</i>Resultados</button>
+  <button data-s="set"><i>⚙</i>Ajustes</button>
+</nav>
+<div id="toast"></div>
+
+<script>
+(()=>{
+"use strict";
+const $=id=>document.getElementById(id);
+const D2R=Math.PI/180,R2D=180/Math.PI;
+const WN={FL:"Diant. ESQ",FR:"Diant. DIR",RL:"Tras. ESQ",RR:"Tras. DIR"};
+const sideOf=w=>w[1]; // 'L' | 'R'
+
+/* ---------- persistência ---------- */
+const store={get(k,d){try{const v=localStorage.getItem("ap_"+k);return v==null?d:JSON.parse(v)}catch(e){return d}},
+             set(k,v){try{localStorage.setItem("ap_"+k,JSON.stringify(v))}catch(e){}}};
+const S=Object.assign({diam:381,capT:1.5,stdLim:0.06,dms:false,invCam:false,invToe:false,zero:{L:0,R:0}},store.get("set",{}));
+const R=store.get("res",{FL:{},FR:{},RL:{},RR:{}});
+const SPEC=store.get("spec",{});
+const saveS=()=>store.set("set",S), saveR=()=>store.set("res",R);
+
+/* ---------- utilidades ---------- */
+const wrap=a=>{a=((a+180)%360+360)%360-180;return a};
+function fmt(v,dec=2,sign=true){
+  if(v==null||isNaN(v))return "—";
+  if(S.dms){const s=v<0?"−":(sign?"+":"");const a=Math.abs(v);let d=Math.floor(a),m=Math.round((a-d)*60);if(m===60){d++;m=0}return `${s}${d}°${String(m).padStart(2,"0")}′`}
+  return (v<0?"−":(sign?"+":""))+Math.abs(v).toFixed(dec)+"°";
+}
+const mm=deg=>S.diam*Math.sin(deg*D2R);
+const fmm=v=>v==null||isNaN(v)?"—":(v<0?"−":"+")+Math.abs(v).toFixed(1)+" mm";
+let tT;function toast(m){const t=$("toast");t.textContent=m;t.classList.add("show");clearTimeout(tT);tT=setTimeout(()=>t.classList.remove("show"),2600)}
+function beep(f=880,ms=90){try{const c=beep.c||(beep.c=new (window.AudioContext||window.webkitAudioContext)());const o=c.createOscillator(),g=c.createGain();o.frequency.value=f;g.gain.value=.08;o.connect(g);g.connect(c.destination);o.start();o.stop(c.currentTime+ms/1000)}catch(e){} try{navigator.vibrate&&navigator.vibrate(40)}catch(e){}}
+
+/* ---------- sensor ----------
+   A partir de alpha/beta/gamma (convenção W3C Z-X'-Y'') calcula o vetor normal à tela
+   no referencial do mundo (x=leste, y=norte, z=cima).
+   elev = inclinação da normal acima do horizonte; hdg = rumo da normal (horário).  */
+let cur=null, nEvt=0, rate=0, hdgZero=0;
+const ring=[]; // últimos ~3 s
+function onOri(e){
+  if(e.alpha==null||e.beta==null||e.gamma==null)return;
+  const a=e.alpha*D2R,b=e.beta*D2R,g=e.gamma*D2R;
+  const ca=Math.cos(a),sa=Math.sin(a),cb=Math.cos(b),sb=Math.sin(b),cg=Math.cos(g),sg=Math.sin(g);
+  const zx=ca*sg+sa*sb*cg, zy=sa*sg-ca*sb*cg, zz=cb*cg;
+  const elev=Math.asin(Math.max(-1,Math.min(1,zz)))*R2D;
+  const hdg=Math.atan2(zx,zy)*R2D;
+  const t=performance.now();
+  cur={t,elev,hdg,horiz:Math.hypot(zx,zy)};
+  ring.push(cur); while(ring.length&&t-ring[0].t>3000)ring.shift();
+  nEvt++; for(const f of subs)f(cur);
+}
+const subs=new Set();
+setInterval(()=>{rate=nEvt;nEvt=0;const p=$("sensPill");if(rate>5){p.textContent=rate+" Hz";p.className="pill on"}else{p.textContent="sem sinal";p.className="pill bad"}},1000);
+
+function stats(arr){ // média/desvio de elev e hdg (rumo com média circular)
+  const n=arr.length;if(!n)return null;
+  let se=0,sx=0,sy=0;for(const s of arr){se+=s.elev;sx+=Math.sin(s.hdg*D2R);sy+=Math.cos(s.hdg*D2R)}
+  const me=se/n,mh=Math.atan2(sx,sy)*R2D;
+  let ve=0,vh=0;for(const s of arr){ve+=(s.elev-me)**2;vh+=wrap(s.hdg-mh)**2}
+  return {elev:me,hdg:mh,sdE:Math.sqrt(ve/n),sdH:Math.sqrt(vh/n),n,t:arr[arr.length-1].t,horiz:arr[arr.length-1].horiz};
+}
+// captura média durante S.capT segundos
+function capture(barEl){
+  return new Promise((res,rej)=>{
+    if(!cur||rate<5){rej(new Error("Sem dados do sensor"));return}
+    const buf=[],T=S.capT*1000,t0=performance.now();
+    const f=s=>{buf.push(s);const p=(s.t-t0)/T;if(barEl)barEl.style.width=Math.min(100,p*100)+"%";
+      if(s.t-t0>=T){subs.delete(f);if(barEl)setTimeout(()=>barEl.style.width="0",400);const st=stats(buf);beep(st.sdE>S.stdLim||st.sdH>S.stdLim*2?330:990);res(st)}};
+    setTimeout(()=>subs.add(f),250); // espera o toque assentar
+  });
+}
+const camberFrom=(elev,side)=>{let c=-(elev-(S.zero[side]||0));return S.invCam?-c:c};
+
+/* ---------- leitura ao vivo ---------- */
+let smE=null,smH=null;
+subs.add(s=>{
+  smE=smE==null?s.elev:smE+(s.elev-smE)*.15;
+  const h=wrap(s.hdg-hdgZero);smH=smH==null?h:smH+wrap(h-smH)*.15;
+});
+setInterval(()=>{
+  if(smE==null)return;
+  $("lvCam").textContent=fmt(-smE);
+  $("lvHdg").textContent=cur&&cur.horiz<0.5?"plano":fmt(smH,1);
+  const st=stats(ring.filter(s=>s.t>performance.now()-800));
+  if(st){const ok=st.sdE<S.stdLim;$("lvStd").textContent=st.sdE.toFixed(3);$("lvStd").className=ok?"ok":"warn"}
+  if(cur)$("diag").textContent=`elev ${cur.elev.toFixed(3)}°  rumo ${cur.hdg.toFixed(2)}°  ${rate} Hz`;
+},120);
+
+/* ---------- ativação ---------- */
+$("btnStart").onclick=async()=>{
+  const msg=$("gateMsg");
+  if(!window.isSecureContext){msg.innerHTML="<span class='bad'>Abra esta página por HTTPS.</span> O iOS não libera sensores em http:// nem em arquivo local.";}
+  try{
+    if(typeof DeviceOrientationEvent!=="undefined"&&typeof DeviceOrientationEvent.requestPermission==="function"){
+      const r=await DeviceOrientationEvent.requestPermission();
+      if(r!=="granted"){msg.innerHTML="<span class='bad'>Permissão negada.</span> Feche a aba, reabra e permita. (Ajustes › Safari › Avançado › Dados de sites, se precisar limpar.)";return}
+      if(typeof DeviceMotionEvent!=="undefined"&&DeviceMotionEvent.requestPermission){try{await DeviceMotionEvent.requestPermission()}catch(e){}}
+    }
+    window.addEventListener("deviceorientation",onOri,true);
+    try{if(navigator.wakeLock)await navigator.wakeLock.request("screen")}catch(e){}
+    beep(660,60);
+    setTimeout(()=>{if(!cur){msg.innerHTML+="<br><span class='warn'>Nenhum dado de orientação recebido. Este aparelho/navegador tem giroscópio?</span>"}else $("gate").remove()},900);
+  }catch(e){msg.innerHTML="<span class='bad'>Erro: "+e.message+"</span>"}
+};
+document.addEventListener("visibilitychange",async()=>{if(!document.hidden)try{navigator.wakeLock&&await navigator.wakeLock.request("screen")}catch(e){}});
+
+/* ---------- navegação ---------- */
+document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>{
+  document.querySelectorAll("nav button").forEach(x=>x.classList.toggle("act",x===b));
+  document.querySelectorAll("section").forEach(x=>x.classList.toggle("act",x.id==="s-"+b.dataset.s));
+  if(b.dataset.s==="res")renderRes();window.scrollTo(0,0);
+});
+function renderSteps(el,list,idx,vals){
+  el.innerHTML=list.map((t,i)=>`<li class="${i<idx?"done":i===idx?"cur":""}">${t}${vals&&vals[i]!=null?`<br><span class="val">${vals[i]}</span>`:""}</li>`).join("");
+}
+
+/* ================= CAMBAGEM ================= */
+let camW="FL",camIdx=0,camCaps=[];
+$("camWheels").innerHTML=Object.keys(WN).map(w=>`<button class="sm grow" data-w="${w}">${WN[w]}</button>`).join("");
+$("camWheels").querySelectorAll("button").forEach(b=>b.onclick=()=>{camW=b.dataset.w;camResetFn()});
+function camStepList(){return $("camRev").checked
+  ?["Encoste o celular na roda (tela para fora), parado.","Gire o celular 180° no mesmo plano (de cabeça para baixo) e encoste de novo no mesmo lugar."]
+  :["Encoste o celular na roda (tela para fora), parado."]}
+function camRender(){
+  $("camWheels").querySelectorAll("button").forEach(b=>b.classList.toggle("sel",b.dataset.w===camW));
+  const L=camStepList();renderSteps($("camSteps"),L,camIdx,camCaps.map(c=>`${fmt(camberFrom(c.elev,sideOf(camW)),3)}  σ ${c.sdE.toFixed(3)}°`));
+  $("camGo").disabled=camIdx>=L.length;$("camGo").textContent=camIdx>=L.length?"Concluído":"Capturar ("+(camIdx+1)+"/"+L.length+")";
+}
+function camResetFn(){camIdx=0;camCaps=[];$("camOut").textContent="—";$("camInfo").textContent="";camRender()}
+$("camRev").onchange=camResetFn;$("camReset").onclick=camResetFn;
+$("camGo").onclick=async()=>{
+  try{
+    const c=await capture($("camBar"));
+    if(c.sdE>S.stdLim)toast("Leitura instável (σ "+c.sdE.toFixed(3)+"°). Considere repetir.");
+    camCaps.push(c);camIdx++;camRender();
+    if(camIdx>=camStepList().length){
+      const side=sideOf(camW),vals=camCaps.map(x=>camberFrom(x.elev,side));
+      const v=vals.reduce((a,b)=>a+b,0)/vals.length;
+      R[camW].camber=v;saveR();
+      $("camOut").innerHTML=fmt(v,2)+" <small>"+WN[camW]+"</small>";
+      $("camInfo").textContent=vals.length>1?`Diferença entre leituras: ${(vals[0]-vals[1]).toFixed(3)}° (erro do encosto/câmera cancelado pela média).`:"Para mais precisão, use o método de reversão.";
+    }
+  }catch(e){toast(e.message)}
+};
+async function zeroSide(sd){try{const c=await capture(null);S.zero[sd]=c.elev;saveS();zeroInfo();toast("Piso zerado no lado "+(sd==="L"?"ESQ":"DIR"))}catch(e){toast(e.message)}}
+function zeroInfo(){$("zeroInfo").textContent=`Zero ESQ: ${fmt(-S.zero.L,3)}   Zero DIR: ${fmt(-S.zero.R,3)}`}
+$("zeroL").onclick=()=>zeroSide("L");$("zeroR").onclick=()=>zeroSide("R");
+
+/* ================= CONVERGÊNCIA ================= */
+let toeSide="L",toeRef=null,toeMeas={},toeRecheck=null,toeStage="ref";
+function toeWheels(){const rt=$("toeRefType").value;return rt==="rear"?["F"]:["F","R"]}
+function toeKey(fr){return fr+toeSide}
+function toeSign(){let s=toeSide==="L"?1:-1;return S.invToe?-s:s}
+function toeRender(){
+  $("toeSideL").classList.toggle("sel",toeSide==="L");$("toeSideR").classList.toggle("sel",toeSide==="R");
+  const rt=$("toeRefType").value,side=toeSide==="L"?"ESQ":"DIR";
+  const steps=[rt==="rear"?`Referência: encoste o celular na roda TRASEIRA ${side}.`:`Referência: encoste o celular na régua paralela ao chassi (lado ${side}).`];
+  const ws=toeWheels();ws.forEach(fr=>steps.push(`Encoste na roda ${fr==="F"?"DIANTEIRA":"TRASEIRA"} ${side} (mesma orientação do celular).`));
+  steps.push("Opcional: volte à referência para corrigir a deriva do giroscópio.");
+  const vals=[toeRef?`rumo ${toeRef.hdg.toFixed(2)}°`:null];
+  ws.forEach(fr=>{const m=toeMeas[fr];vals.push(m?`Δ ${fmt(m.raw,3)}  (${((m.t-toeRef.t)/1000).toFixed(1)} s)`:null)});
+  vals.push(toeRecheck?`deriva ${(toeRecheck.drift).toFixed(3)}° em ${(toeRecheck.dt/1000).toFixed(1)} s`:null);
+  let idx=!toeRef?0:1+ws.filter(f=>toeMeas[f]).length;
+  renderSteps($("toeSteps"),steps,idx,vals);
+  const B=$("toeBtns");B.innerHTML="";
+  const mk=(t,fn,pri)=>{const b=document.createElement("button");b.textContent=t;b.className=(pri?"pri ":"")+"grow";b.onclick=fn;B.appendChild(b)};
+  if(!toeRef)mk("Capturar referência",toeCapRef,true);
+  else{
+    const next=ws.find(f=>!toeMeas[f]);
+    if(next)mk("Capturar "+(next==="F"?"dianteira":"traseira"),()=>toeCapW(next),true);
+    else if(!toeRecheck)mk("Reconferir referência",toeCapRecheck,true);
+    mk("Reiniciar",toeReset);
+  }
+  toeShow();
+}
+function toeShow(){
+  const ws=toeWheels(),out=[];
+  ws.forEach(fr=>{const m=toeMeas[fr];if(!m)return;
+    let d=m.raw;if(toeRecheck)d-=toeRecheck.rate*(m.t-toeRef.t);
+    const toe=toeSign()*d;out.push([fr,toe]);
+    R[toeKey(fr)].toe=toe;});
+  if(out.length){saveR();
+    $("toeOut").innerHTML=out.map(([fr,t])=>`${fmt(t,2)} <small>${fr==="F"?"diant.":"tras."}</small>`).join("<br>");
+    $("toeInfo").textContent=out.map(([fr,t])=>`${fr==="F"?"Diant.":"Tras."}: ${fmm(mm(t))} @ Ø${S.diam} mm`).join(" · ")+(toeRecheck?" · deriva corrigida":" · sem correção de deriva");
+  }else{$("toeOut").textContent="—";$("toeInfo").textContent=""}
+}
+function horizOk(c){if(c.horiz<0.7){toast("Celular muito deitado — mantenha-o em pé contra a roda.");return false}return true}
+async function toeCapRef(){try{const c=await capture($("toeBar"));if(!horizOk(c))return;toeRef=c;toeRender()}catch(e){toast(e.message)}}
+async function toeCapW(fr){try{const c=await capture($("toeBar"));if(!horizOk(c))return;
+  const raw=wrap(c.hdg-toeRef.hdg);
+  if(Math.abs(raw)>10)toast("Diferença > 10°: verifique se o celular está na mesma orientação/face.");
+  if((c.t-toeRef.t)>30000)toast("Passaram mais de 30 s — a deriva pode afetar. Reconfira a referência.");
+  toeMeas[fr]={raw,t:c.t,sd:c.sdH};toeRender()}catch(e){toast(e.message)}}
+async function toeCapRecheck(){try{const c=await capture($("toeBar"));if(!horizOk(c))return;
+  const drift=wrap(c.hdg-toeRef.hdg),dt=c.t-toeRef.t;toeRecheck={drift,dt,rate:drift/dt};
+  if(Math.abs(drift)>0.5)toast("Deriva alta ("+drift.toFixed(2)+"°). Talvez o celular tenha sido encostado diferente — repita.");
+  toeRender()}catch(e){toast(e.message)}}
+function toeReset(){toeRef=null;toeMeas={};toeRecheck=null;toeRender()}
+$("toeSideL").onclick=()=>{toeSide="L";toeReset()};$("toeSideR").onclick=()=>{toeSide="R";toeReset()};
+$("toeRefType").onchange=toeReset;
+
+/* ================= CÁSTER ================= */
+let casSide="L",casCaps=[];
+const casSteps=()=>{const s=casSide==="L"?"ESQ":"DIR";return[
+  `Esterce para que a FRENTE da roda ${s} aponte PARA FORA do carro (~20°). Encoste o celular e capture.`,
+  `Esterce para o lado oposto: frente da roda apontando PARA DENTRO (~20°). Encoste e capture.`]};
+function casRender(){
+  $("casSideL").classList.toggle("sel",casSide==="L");$("casSideR").classList.toggle("sel",casSide==="R");
+  const side=casSide;renderSteps($("casSteps"),casSteps(),casCaps.length,casCaps.map(c=>`camb ${fmt(camberFrom(c.elev,side),3)}`));
+  $("casGo").disabled=casCaps.length>=2;$("casGo").textContent=casCaps.length>=2?"Concluído":"Capturar ("+(casCaps.length+1)+"/2)";
+}
+function casReset(){casCaps=[];$("casOut").textContent="—";$("casInfo").textContent="";casRender()}
+$("casReset").onclick=casReset;
+$("casSideL").onclick=()=>{casSide="L";casReset()};$("casSideR").onclick=()=>{casSide="R";casReset()};
+$("casGo").onclick=async()=>{try{
+  const c=await capture($("casBar"));if(!horizOk(c))return;casCaps.push(c);casRender();
+  if(casCaps.length===2){
+    const [o,i]=casCaps,side=casSide;
+    const steer=Math.abs(wrap(i.hdg-o.hdg));            // esterço total medido
+    const dC=camberFrom(o.elev,side)-camberFrom(i.elev,side);
+    if(steer<20){toast("Esterço total de só "+steer.toFixed(1)+"° — use ~40° (±20°).");}
+    const cas=dC/(2*Math.sin(steer/2*D2R));
+    const key="F"+side;R[key].caster=cas;saveR();
+    $("casOut").innerHTML=fmt(cas,2)+" <small>"+WN[key]+"</small>";
+    $("casInfo").textContent=`Esterço total medido: ${steer.toFixed(1)}° · Δcambagem: ${dC.toFixed(3)}° · positivo = pino inclinado para trás.`;
+  }}catch(e){toast(e.message)}};
+
+/* ================= RESULTADOS ================= */
+const SPEC_FIELDS=[["camF","Cambagem diant."],["camR","Cambagem tras."],["toeF","Toe diant. (por roda)"],["toeR","Toe tras. (por roda)"],["cas","Cáster"]];
+$("specForm").innerHTML=SPEC_FIELDS.map(([k,n])=>`<label>${n} (°)</label><div class="two"><input data-k="${k}" data-p="v" type="number" inputmode="decimal" step="0.01" placeholder="alvo" value="${SPEC[k]?.v??""}"><input data-k="${k}" data-p="t" type="number" inputmode="decimal" step="0.01" placeholder="± tol." value="${SPEC[k]?.t??""}"></div>`).join("");
+$("specForm").querySelectorAll("input").forEach(i=>i.oninput=()=>{const k=i.dataset.k;SPEC[k]=SPEC[k]||{};SPEC[k][i.dataset.p]=i.value===""?null:+i.value;store.set("spec",SPEC)});
+function judge(v,k){const s=SPEC[k];if(v==null||!s||s.v==null||s.t==null)return"";return Math.abs(v-s.v)<=s.t?"ok":"bad"}
+function renderRes(){
+  for(const w of Object.keys(WN)){const r=R[w],F=w[0]==="F";
+    $("w-"+w).innerHTML=`<b>${WN[w]}</b>
+      Camb <span class="${judge(r.camber,F?"camF":"camR")}">${fmt(r.camber)}</span><br>
+      Toe <span class="${judge(r.toe,F?"toeF":"toeR")}">${fmt(r.toe)}</span><br>
+      ${r.toe!=null?`<span class="mut">${fmm(mm(r.toe))}</span><br>`:""}
+      ${F?`Cást <span class="${judge(r.caster,"cas")}">${fmt(r.caster)}</span>`:""}`;}
+  const tF=R.FL.toe!=null&&R.FR.toe!=null?R.FL.toe+R.FR.toe:null,tR=R.RL.toe!=null&&R.RR.toe!=null?R.RL.toe+R.RR.toe:null;
+  const cc=(a,b)=>a!=null&&b!=null?a-b:null;
+  $("totTbl").innerHTML=`<tr><th></th><th>Diant.</th><th>Tras.</th></tr>
+   <tr><td>Toe total</td><td>${fmt(tF)}<br><span class="mut">${fmm(tF==null?null:mm(tF))}</span></td><td>${fmt(tR)}<br><span class="mut">${fmm(tR==null?null:mm(tR))}</span></td></tr>
+   <tr><td>Cross-camber (E−D)</td><td>${fmt(cc(R.FL.camber,R.FR.camber))}</td><td>${fmt(cc(R.RL.camber,R.RR.camber))}</td></tr>
+   <tr><td>Cross-cáster (E−D)</td><td>${fmt(cc(R.FL.caster,R.FR.caster))}</td><td>—</td></tr>`;
+}
+$("copyRes").onclick=async()=>{
+  const L=["AlignPhone — "+new Date().toLocaleString("pt-BR")];
+  for(const w of Object.keys(WN)){const r=R[w];L.push(`${WN[w]}: camb ${fmt(r.camber)} | toe ${fmt(r.toe)} (${fmm(r.toe==null?null:mm(r.toe))})${w[0]==="F"?" | cáster "+fmt(r.caster):""}`)}
+  L.push(`Ref. Ø ${S.diam} mm`);
+  try{await navigator.clipboard.writeText(L.join("\n"));toast("Relatório copiado")}catch(e){toast("Não foi possível copiar")}
+};
+let clr=0;$("clearRes").onclick=()=>{if(Date.now()-clr>2500){clr=Date.now();toast("Toque de novo para apagar tudo");return}
+  for(const w in R)R[w]={};saveR();renderRes();toast("Resultados apagados")};
+
+/* ================= AJUSTES ================= */
+const bind=(id,key,num)=>{const el=$(id);if(el.type==="checkbox"){el.checked=!!S[key];el.onchange=()=>{S[key]=el.checked;saveS();zeroInfo();toeShow()}}
+  else{el.value=S[key];el.oninput=()=>{const v=parseFloat(el.value);if(!isNaN(v)){S[key]=v;saveS();toeShow()}}}};
+bind("diam","diam");bind("capT","capT");bind("stdLim","stdLim");bind("dms","dms");bind("invCam","invCam");bind("invToe","invToe");
+for(let a=13;a<=22;a++)$("diamPreset").insertAdjacentHTML("beforeend",`<option value="${(a*25.4).toFixed(1)}">aro ${a}" — ${(a*25.4).toFixed(0)} mm</option>`);
+$("diamPreset").onchange=e=>{if(e.target.value){$("diam").value=e.target.value;S.diam=+e.target.value;saveS();toeShow()}};
+$("hdgZero").onclick=()=>{if(cur){hdgZero=cur.hdg;smH=0;toast("Rumo relativo zerado")}};
+
+zeroInfo();camRender();toeRender();casRender();renderRes();
+// desktop sem sensor de orientação: mantém a tela inicial com aviso
+if(!("DeviceOrientationEvent" in window))$("gateMsg").textContent="Este navegador não expõe sensores de orientação.";
+})();
+</script>
+</body>
+</html>
